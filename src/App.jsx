@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Heart, 
   Calendar, 
-  MapPin, 
   Clock, 
   Music, 
   Volume2, 
   VolumeX, 
-  Gift, 
   Camera, 
   Mail,
-  ChevronDown,
-  Copy,
-  CheckCircle2
+  ChevronDown
 } from 'lucide-react';
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [rsvpName, setRsvpName] = useState('');
-  const [rsvpStatus, setRsvpStatus] = useState('Hadir');
-  const [rsvpMessage, setRsvpMessage] = useState('');
-  const [wishes, setWishes] = useState([
-    { name: 'Budi & Keluarga', status: 'Hadir', message: 'Selamat menempuh hidup baru! Semoga samawa ya.' },
-    { name: 'Siska', status: 'Hadir', message: 'Lancar sampai hari H kesayanganku! ❤️' }
-  ]);
-  const [copiedBank, setCopiedBank] = useState(false);
+  
+  // 1. Tambahkan useRef untuk mengontrol elemen audio
+  const audioRef = useRef(null);
 
-  // Tanggal Pernikahan (Contoh: 20 Desember 2026)
+  // Tanggal Pernikahan
   const weddingDate = new Date('2026-04-02T08:00:00').getTime();
 
   useEffect(() => {
@@ -52,43 +43,29 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // 2. Fungsi untuk play/pause musik dari tombol melayang
   const toggleMusic = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
     setIsPlaying(!isPlaying);
-    // Di aplikasi nyata, Anda akan mengontrol tag <audio> di sini
-    // const audio = document.getElementById('bg-music');
-    // if (isPlaying) audio.pause(); else audio.play();
   };
 
+  // 3. Fungsi memutar musik saat tombol "Buka Undangan" diklik
   const handleOpenInvitation = () => {
     setIsOpened(true);
     setIsPlaying(true);
-    window.scrollTo({ top: document.getElementById('hero').offsetTop, behavior: 'smooth' });
-  };
-
-  const submitRsvp = (e) => {
-    e.preventDefault();
-    if (!rsvpName || !rsvpMessage) return;
     
-    setWishes([{ name: rsvpName, status: rsvpStatus, message: rsvpMessage }, ...wishes]);
-    setRsvpName('');
-    setRsvpMessage('');
-    alert('Terima kasih atas ucapan dan konfirmasinya!');
-  };
-
-  const copyToClipboard = (text) => {
-    // navigator.clipboard.writeText tidak selalu jalan di iframe, kita pakai cara ini:
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      setCopiedBank(true);
-      setTimeout(() => setCopiedBank(false), 2000);
-    } catch (err) {
-      console.error('Gagal menyalin', err);
+    // Mulai putar musik
+    if (audioRef.current) {
+      audioRef.current.play().catch((err) => {
+        console.log("Autoplay dicegah browser", err);
+      });
     }
-    document.body.removeChild(textArea);
+
+    window.scrollTo({ top: document.getElementById('hero').offsetTop, behavior: 'smooth' });
   };
 
   if (!isOpened) {
@@ -126,6 +103,13 @@ export default function App() {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
+
+      {/* 4. Tag Audio disembunyikan di sini (membaca dari folder public) */}
+      <audio 
+        ref={audioRef} 
+        src="/YoungandBeautiful.mp3" 
+        loop 
+      />
 
       {/* Floating Music Button */}
       <button 
@@ -294,7 +278,6 @@ export default function App() {
           </div>
         </div>
       </section>
-
 
       {/* Footer */}
       <footer className="py-8 bg-slate-950 text-center border-t border-slate-800">
