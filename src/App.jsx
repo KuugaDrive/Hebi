@@ -3,12 +3,17 @@ import {
   Heart, 
   Calendar, 
   Clock, 
-  Music, 
   Volume2, 
   VolumeX, 
   Camera, 
   Mail,
-  ChevronDown
+  ChevronDown,
+  MapPin,
+  Send,
+  QrCode,
+  Gift,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function App() {
@@ -16,13 +21,17 @@ export default function App() {
   const [isOpened, setIsOpened] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   
-  // 1. Tambahkan useRef untuk mengontrol elemen audio
+  // States untuk Interaktivitas Baru
+  const [rsvpName, setRsvpName] = useState('');
+  const [rsvpStatus, setRsvpStatus] = useState('Hadir');
+  const [showTicket, setShowTicket] = useState(false);
+  const [copiedBank, setCopiedBank] = useState(false);
+  
   const audioRef = useRef(null);
-
-  // Tanggal Pernikahan
   const weddingDate = new Date('2026-04-02T08:00:00').getTime();
 
   useEffect(() => {
+    // Timer Hitung Mundur
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = weddingDate - now;
@@ -40,10 +49,25 @@ export default function App() {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    // Animasi Muncul saat Scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0.15 });
 
-  // 2. Fungsi untuk play/pause musik dari tombol melayang
+    document.querySelectorAll('.reveal-on-scroll').forEach((elem) => {
+      observer.observe(elem);
+    });
+
+    return () => {
+      clearInterval(timer);
+      observer.disconnect();
+    };
+  }, [isOpened]);
+
   const toggleMusic = () => {
     if (isPlaying) {
       audioRef.current.pause();
@@ -53,238 +77,280 @@ export default function App() {
     setIsPlaying(!isPlaying);
   };
 
-  // 3. Fungsi memutar musik saat tombol "Buka Undangan" diklik
   const handleOpenInvitation = () => {
     setIsOpened(true);
     setIsPlaying(true);
-    
-    // Mulai putar musik
     if (audioRef.current) {
-      audioRef.current.play().catch((err) => {
-        console.log("Autoplay dicegah browser", err);
-      });
+      audioRef.current.play().catch(e => console.log("Autoplay ditahan", e));
     }
-
-    window.scrollTo({ top: document.getElementById('hero').offsetTop, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: document.getElementById('hero').offsetTop, behavior: 'smooth' });
+    }, 100);
   };
 
+  const handleRsvpSubmit = (e) => {
+    e.preventDefault();
+    if (rsvpName.trim() === '') return;
+    setShowTicket(true);
+  };
+
+  const copyToClipboard = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      setCopiedBank(true);
+      setTimeout(() => setCopiedBank(false), 2500);
+    } catch (err) {
+      console.error('Gagal menyalin', err);
+    }
+    document.body.removeChild(textArea);
+  };
+
+  // --- HALAMAN SAMPUL ---
   if (!isOpened) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden">
-        {/* Background Image with Overlay */}
+      <div className="min-h-screen bg-[#111] flex items-center justify-center relative overflow-hidden">
+        {/* Background Layer */}
         <div 
-          className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
-          style={{ backgroundImage: 'url(https://images.pexels.com/photos/169203/pexels-photo-169203.jpeg?_gl=1*1wtv0nn*_ga*MTAyMzAzODg3Mi4xNzcyNjAwNTM4*_ga_8JE65Q40S6*czE3NzI2MDA1MzckbzEkZzEkdDE3NzI2MDA1NDMkajU0JGwwJGgw)' }}
+          className="absolute inset-0 z-0 opacity-40 bg-cover bg-center transition-transform duration-[20s] hover:scale-110"
+          style={{ backgroundImage: 'url(https://images.pexels.com/photos/169203/pexels-photo-169203.jpeg?auto=compress&cs=tinysrgb&w=2000)' }}
         ></div>
         
-        <div className="z-10 text-center px-6 max-w-lg mx-auto bg-white/10 backdrop-blur-md p-10 rounded-2xl border border-white/20 shadow-2xl animate-fade-in">
-          <p className="text-rose-200 text-sm tracking-widest uppercase mb-4 font-semibold">Undangan Pernikahan</p>
-          <h1 className="text-5xl md:text-6xl font-serif text-white mb-6">A W Aluqmana & Fitria Azzahra</h1>
-          <p className="text-gray-200 mb-8 italic">Kepada Yth. Bapak/Ibu/Saudara/i</p>
+        {/* Floating Particles Animation */}
+        <div className="absolute inset-0 z-0 opacity-30">
+          {[...Array(15)].map((_, i) => (
+            <div key={i} 
+                 className="absolute rounded-full bg-white animate-float"
+                 style={{
+                   width: Math.random() * 4 + 1 + 'px',
+                   height: Math.random() * 4 + 1 + 'px',
+                   left: Math.random() * 100 + '%',
+                   top: Math.random() * 100 + '%',
+                   animationDuration: Math.random() * 10 + 5 + 's',
+                   animationDelay: Math.random() * 5 + 's'
+                 }}>
+            </div>
+          ))}
+        </div>
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 z-0"></div>
+        
+        <div className="z-10 text-center px-6 w-full max-w-lg mx-auto flex flex-col items-center animate-fade-in-slow backdrop-blur-sm bg-black/20 p-12 rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <Heart className="w-8 h-8 text-[#D4AF37] mb-6 animate-pulse-slow opacity-80" />
+          <p className="text-[#D4AF37] text-xs tracking-[0.4em] uppercase mb-4 font-light">The Wedding Of</p>
+          <h1 className="text-5xl md:text-6xl font-serif text-white mb-6 drop-shadow-lg">Aluqmana <br/><span className="text-3xl italic font-light text-[#D4AF37]">&</span><br/> Fitria</h1>
+          
+          <div className="w-12 h-px bg-[#D4AF37]/50 mb-8"></div>
+          <p className="text-gray-300 text-sm mb-10 font-light tracking-wide">Kepada Yth. Bapak/Ibu/Saudara/i</p>
+          
           <button 
             onClick={handleOpenInvitation}
-            className="group relative px-8 py-3 bg-rose-600 text-white rounded-full font-medium hover:bg-rose-700 transition-all duration-300 flex items-center justify-center gap-2 mx-auto overflow-hidden shadow-lg shadow-rose-600/30"
+            className="group relative px-8 py-4 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/50 rounded-full hover:bg-[#D4AF37] hover:text-white transition-all duration-500 flex items-center gap-3 overflow-hidden"
           >
-            <Mail className="w-5 h-5 transition-transform group-hover:scale-110" />
-            Buka Undangan
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+            <Mail className="w-4 h-4 relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12" />
+            <span className="text-sm uppercase tracking-widest relative z-10 font-medium">Buka Undangan</span>
           </button>
         </div>
       </div>
     );
   }
 
+  // --- HALAMAN UTAMA ---
   return (
-    <div className="font-sans text-slate-800 bg-rose-50/30 min-h-screen selection:bg-rose-200 selection:text-rose-900">
+    <div className="font-sans text-[#2C302E] bg-[#F9F7F3] min-h-screen selection:bg-[#D4AF37]/30 selection:text-[#2C302E]">
       <style dangerouslySetInnerHTML={{__html: `
         html { scroll-behavior: smooth; }
-        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
-        .animate-fade-in { animation: fadeIn 1.5s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 1s ease-out forwards; }
+        .font-serif { font-family: 'Playfair Display', 'Baskerville', Georgia, serif; }
+        
+        .animate-fade-in-slow { animation: fadeIn 2s ease-out forwards; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-float { animation: float 10s ease-in-out infinite; }
+        .animate-slide-up { animation: slideUp 0.8s ease-out forwards; }
+        
+        .reveal-on-scroll {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: all 1s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal-on-scroll.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+          50% { opacity: 0.8; }
+          100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F9F7F3; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
       `}} />
 
-      {/* 4. Tag Audio disembunyikan di sini (membaca dari folder public) */}
-      <audio 
-        ref={audioRef} 
-        src="/YoungandBeautiful.mp3" 
-        loop 
-      />
+      <audio ref={audioRef} src="/YoungandBeautiful.mp3" loop />
+>
+      </div>
 
-      {/* Floating Music Button */}
-      <button 
-        onClick={toggleMusic}
-        className="fixed bottom-6 right-6 z-50 p-4 bg-white/80 backdrop-blur-md text-rose-600 rounded-full shadow-xl shadow-rose-200/50 hover:bg-rose-50 transition-all duration-300"
-      >
-        {isPlaying ? <Volume2 className="w-6 h-6 animate-pulse" /> : <VolumeX className="w-6 h-6" />}
-      </button>
-
-      {/* 1. Hero Section */}
+      {/* 1. HERO SECTION (Parallax) */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* bg-fixed creates the parallax effect */}
         <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(https://images.pexels.com/photos/1172849/pexels-photo-1172849.jpeg?_gl=1*12mki7f*_ga*MTAyMzAzODg3Mi4xNzcyNjAwNTM4*_ga_8JE65Q40S6*czE3NzI2MDA1MzckbzEkZzEkdDE3NzI2MDA2MDgkajYwJGwwJGgw)' }}
+          className="absolute inset-0 bg-cover bg-center bg-fixed"
+          style={{ backgroundImage: 'url(https://images.pexels.com/photos/1172849/pexels-photo-1172849.jpeg?auto=compress&cs=tinysrgb&w=2000)' }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-slate-900/90"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
         
-        <div className="relative z-10 text-center px-4 animate-slide-up">
-          <p className="text-rose-300 tracking-[0.3em] text-sm md:text-base mb-6 font-medium uppercase">We Are Getting Married</p>
-          <h1 className="text-6xl md:text-8xl font-serif text-white mb-6 drop-shadow-lg">A W Aluqmana <span className="text-rose-400">&</span> Fitria Azzahra</h1>
-          <p className="text-gray-300 text-lg md:text-xl mb-12">Kamis, 2 April 2026</p>
+        <div className="relative z-10 text-center px-4 w-full mt-20">
+          <p className="text-[#D4AF37] tracking-[0.4em] text-xs md:text-sm mb-6 uppercase reveal-on-scroll font-medium shadow-black drop-shadow-md">We Are Getting Married</p>
+          <h1 className="text-6xl md:text-8xl font-serif text-white mb-6 drop-shadow-2xl reveal-on-scroll delay-100">Aluqmana <br/><span className="text-3xl md:text-5xl font-light italic text-[#D4AF37]">&</span><br/> Fitria</h1>
           
-          {/* Countdown Timer */}
-          <div className="flex justify-center gap-4 md:gap-6 text-white mb-16">
+          <div className="w-px h-16 bg-gradient-to-b from-[#D4AF37] to-transparent mx-auto my-8 reveal-on-scroll delay-200"></div>
+          
+          <p className="text-white text-sm md:text-base tracking-[0.2em] uppercase mb-12 reveal-on-scroll delay-200 drop-shadow-md">Kamis, 2 April 2026</p>
+          
+          <div className="flex justify-center gap-4 md:gap-8 text-white mb-16 reveal-on-scroll delay-300">
             {[
               { label: 'Hari', value: timeLeft.days },
               { label: 'Jam', value: timeLeft.hours },
               { label: 'Menit', value: timeLeft.minutes },
               { label: 'Detik', value: timeLeft.seconds }
             ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center bg-white/10 backdrop-blur-sm px-4 py-3 md:px-6 md:py-4 rounded-xl border border-white/20">
-                <span className="text-3xl md:text-4xl font-serif mb-1">{item.value}</span>
-                <span className="text-xs md:text-sm text-gray-300 uppercase tracking-wider">{item.label}</span>
+              <div key={idx} className="flex flex-col items-center bg-white/10 backdrop-blur-md w-16 h-20 md:w-24 md:h-28 justify-center rounded-2xl border border-white/20 shadow-xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="text-2xl md:text-4xl font-serif mb-1 relative z-10">{item.value}</span>
+                <span className="text-[9px] md:text-xs tracking-widest uppercase text-white/70 relative z-10">{item.label}</span>
               </div>
             ))}
           </div>
 
-          <a href="#couple" className="inline-flex flex-col items-center text-white/70 hover:text-white transition-colors animate-bounce">
-            <span className="text-sm mb-2 uppercase tracking-widest">Scroll ke bawah</span>
-            <ChevronDown className="w-6 h-6" />
+          <a href="#quote" className="inline-flex flex-col items-center text-white/70 hover:text-white transition-colors reveal-on-scroll delay-300">
+            <span className="text-[10px] mb-2 uppercase tracking-[0.2em]">Scroll Kebawah</span>
+            <ChevronDown className="w-5 h-5 animate-bounce" />
           </a>
         </div>
       </section>
 
-      {/* 2. Couple Section */}
-      <section id="couple" className="py-24 px-6 bg-white relative">
-        <div className="max-w-4xl mx-auto text-center">
-          <Heart className="w-10 h-10 text-rose-300 mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-serif text-slate-800 mb-6">Mempelai</h2>
-          <p className="text-slate-600 mb-16 leading-relaxed max-w-2xl mx-auto italic">
-            "Maha Suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan. Ya Allah perkenankanlah kami merangkaikan kasih sayang yang Kau ciptakan di antara putra-putri kami."
+      {/* QUOTE SECTION */}
+      <section id="quote" className="py-24 px-6 bg-[#F9F7F3] relative flex items-center justify-center text-center">
+        <div className="max-w-3xl mx-auto reveal-on-scroll">
+          <Heart className="w-8 h-8 text-[#D4AF37] mx-auto mb-8 opacity-80" />
+          <p className="text-xl md:text-2xl font-serif leading-loose text-[#2C302E] italic">
+            "Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri..."
           </p>
+          <p className="mt-8 text-sm tracking-[0.3em] text-[#D4AF37] uppercase font-medium">— Ar-Rum: 21 —</p>
+        </div>
+      </section>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-20">
+      {/* 2. COUPLE SECTION */}
+      <section id="couple" className="py-24 px-6 bg-white relative">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-20 reveal-on-scroll">
+            <p className="text-xs tracking-[0.3em] uppercase text-[#D4AF37] mb-4 font-medium">Sang Mempelai</p>
+            <h2 className="text-4xl md:text-5xl font-serif text-[#2C302E]">Groom & Bride</h2>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-16 md:gap-24">
             {/* Groom */}
-            <div className="flex flex-col items-center group">
-              <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden mb-6 border-4 border-rose-100 shadow-xl transition-transform duration-500 group-hover:scale-105">
+            <div className="flex flex-col items-center text-center reveal-on-scroll w-full md:w-1/3">
+              <div className="w-64 h-[400px] mb-8 overflow-hidden rounded-t-full shadow-2xl relative group p-2 border border-[#D4AF37]/30 bg-[#F9F7F3]">
                 <img 
                   src="https://images3.alphacoders.com/133/thumb-1920-1339467.png" 
                   alt="Groom" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-t-full transition-transform duration-[2s] group-hover:scale-110"
                 />
               </div>
-              <h3 className="text-2xl font-serif text-slate-800 mb-2">A W Aluqmana, S.Farm.</h3>
-              <p className="text-slate-500 text-sm">Putra Pertama dari</p>
-              <p className="text-slate-700 font-medium">Bpk. Malikun & Ibu Erni</p>
+              <h3 className="text-3xl font-serif text-[#2C302E] mb-2">A W Aluqmana</h3>
+              <p className="text-[#D4AF37] text-sm mb-4 font-medium tracking-wider">S.Farm.</p>
+              <p className="text-[#2C302E]/60 text-sm">Putra Pertama dari</p>
+              <p className="text-[#2C302E] font-medium text-sm mt-1">Bpk. Malikun & Ibu Erni</p>
             </div>
 
-            <div className="text-4xl font-serif text-rose-300 md:translate-y-[-20px]">&</div>
+            <div className="text-4xl font-serif text-[#D4AF37]/40 md:translate-y-[-50px] reveal-on-scroll delay-100">&</div>
 
             {/* Bride */}
-            <div className="flex flex-col items-center group">
-              <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden mb-6 border-4 border-rose-100 shadow-xl transition-transform duration-500 group-hover:scale-105">
+            <div className="flex flex-col items-center text-center reveal-on-scroll delay-200 w-full md:w-1/3">
+              <div className="w-64 h-[400px] mb-8 overflow-hidden rounded-t-full shadow-2xl relative group p-2 border border-[#D4AF37]/30 bg-[#F9F7F3]">
                 <img 
                   src="https://images5.alphacoders.com/134/thumb-1920-1340473.png" 
                   alt="Bride" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-t-full transition-transform duration-[2s] group-hover:scale-110"
                 />
               </div>
-              <h3 className="text-2xl font-serif text-slate-800 mb-2">Fitria Azzahra, S.Farm.</h3>
-              <p className="text-slate-500 text-sm">Putri Bungsu dari</p>
-              <p className="text-slate-700 font-medium">Bpk. Haryanto & Ibu Ningsih</p>
+              <h3 className="text-3xl font-serif text-[#2C302E] mb-2">Fitria Azzahra</h3>
+              <p className="text-[#D4AF37] text-sm mb-4 font-medium tracking-wider">S.Farm.</p>
+              <p className="text-[#2C302E]/60 text-sm">Putri Bungsu dari</p>
+              <p className="text-[#2C302E] font-medium text-sm mt-1">Bpk. Haryanto & Ibu Ningsih</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Event Details */}
-      <section className="py-24 px-6 bg-rose-50 relative">
+      {/* 3. EVENT DETAILS */}
+      <section className="py-24 px-6 bg-[#F9F7F3] relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif text-slate-800 mb-4">Waktu & Tempat</h2>
-            <p className="text-slate-600">Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir pada acara pernikahan kami.</p>
+          <div className="text-center mb-16 reveal-on-scroll">
+            <h2 className="text-4xl md:text-5xl font-serif text-[#2C302E] mb-6">Waktu & Tempat</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Akad Card */}
-            <div className="bg-white p-8 md:p-10 rounded-3xl shadow-lg border border-rose-100 text-center relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
-              <div className="absolute top-0 left-0 w-full h-2 bg-rose-300"></div>
-              <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500 group-hover:scale-110 transition-transform">
-                <Calendar className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-serif text-slate-800 mb-4">Akad Nikah</h3>
-              <div className="space-y-4 text-slate-600 mb-8">
-                <p className="font-medium text-lg">Kamis, 2 April 2026</p>
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="w-5 h-5 text-rose-400" />
-                  <span>08:00 - 10:00 WIB</span>
-                  
-                </div>
-                
-              </div>
-                            <a 
-                href="https://maps.app.goo.gl/fEFo4M7WRv4g13wX6" 
-                target="_blank" 
-                rel="noreferrer"
-                className="inline-block px-6 py-2 bg-slate-800 text-white rounded-full text-sm hover:bg-slate-700 transition-colors"
-              >
-                Buka Google Maps
-              </a>
-            </div>
-
-            {/* Resepsi Card */}
-            <div className="bg-white p-8 md:p-10 rounded-3xl shadow-lg border border-rose-100 text-center relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
-              <div className="absolute top-0 left-0 w-full h-2 bg-rose-400"></div>
-              <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500 group-hover:scale-110 transition-transform">
-                <Music className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-serif text-slate-800 mb-4">Resepsi</h3>
-              <div className="space-y-4 text-slate-600 mb-8">
-                <p className="font-medium text-lg">Kamis, 2 April 2026</p>
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="w-5 h-5 text-rose-400" />
-                  <span>11:00 - 14:00 WIB</span>
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+            {[
+              { title: 'Akad Nikah', time: '08:00 - 10:00 WIB' },
+              { title: 'Resepsi', time: '11:00 - 14:00 WIB' }
+            ].map((event, i) => (
+              <div key={i} className={`bg-white p-10 md:p-12 shadow-xl border border-[#D4AF37]/20 text-center reveal-on-scroll rounded-3xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500 ${i === 1 ? 'delay-100' : ''}`}>
+                <div className="absolute inset-0 bg-[#D4AF37]/5 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500"></div>
+                <div className="relative z-10">
+                  <h3 className="text-3xl font-serif text-[#2C302E] mb-8">{event.title}</h3>
+                  <div className="space-y-6 text-[#2C302E]/70 mb-10">
+                    <div className="flex flex-col items-center">
+                      <Calendar className="w-6 h-6 mb-3 text-[#D4AF37]" />
+                      <p className="font-medium text-lg">Kamis, 2 April 2026</p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <Clock className="w-6 h-6 mb-3 text-[#D4AF37]" />
+                      <p className="tracking-widest font-medium">{event.time}</p>
+                    </div>
+                  </div>
+                  <a 
+                    href="https://maps.app.goo.gl/fEFo4M7WRv4g13wX6" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#2C302E] text-white text-xs uppercase tracking-[0.2em] rounded-full hover:bg-[#D4AF37] transition-colors shadow-lg"
+                  >
+                    <MapPin className="w-4 h-4" /> Buka Peta Lokasi
+                  </a>
                 </div>
               </div>
-              <a 
-                href="https://maps.app.goo.gl/fEFo4M7WRv4g13wX6" 
-                target="_blank" 
-                rel="noreferrer"
-                className="inline-block px-6 py-2 bg-slate-800 text-white rounded-full text-sm hover:bg-slate-700 transition-colors"
-              >
-                Buka Google Maps
-              </a>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 4. Gallery Section */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <Camera className="w-10 h-10 text-rose-300 mx-auto mb-4" />
-            <h2 className="text-3xl md:text-4xl font-serif text-slate-800 mb-4">Galeri Kami</h2>
-            <p className="text-slate-600">Momen kebersamaan kami</p>
-          </div>
+    
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            <img src="https://images7.alphacoders.com/132/thumb-1920-1322952.jpeg" alt="Gallery 1" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-            <img src="https://images5.alphacoders.com/481/thumb-1920-481903.png " alt="Gallery 2" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-            <img src="https://images8.alphacoders.com/699/thumb-1920-699136.png" alt="Gallery 3" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-            <img src="https://images5.alphacoders.com/699/thumb-1920-699214.png" alt="Gallery 4" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-            <img src="https://picfiles.alphacoders.com/646/thumb-1920-646627.png" alt="Gallery 5" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-            <img src="https://picfiles.alphacoders.com/646/thumb-1920-646627.png" alt="Gallery 6" className="w-full h-48 md:h-72 object-cover rounded-2xl hover:opacity-90 transition-opacity cursor-pointer shadow-sm" />
-          </div>
+     
+      {/* FOOTER */}
+      <footer className="py-16 bg-[#111] text-center border-t border-white/5">
+        <div className="max-w-2xl mx-auto px-6 reveal-on-scroll">
+          <p className="text-[#D4AF37] text-3xl mb-8 opacity-50 font-serif">A & F</p>
+          <p className="text-white/50 text-sm leading-relaxed mb-10 font-light italic">
+            "Terima kasih atas doa restu dan kehadiran Anda."
+          </p>
+          <div className="w-24 h-px bg-[#D4AF37]/30 mx-auto mb-8"></div>
+          <p className="text-white/30 text-[10px] tracking-[0.4em] uppercase">Built for Smart Glasses Verification</p>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 bg-slate-950 text-center border-t border-slate-800">
-        <p className="text-gray-400 text-sm">
-          Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.
-        </p>
-        <h2 className="text-3xl font-serif text-white mt-6 mb-2">A W Aluqmana & Fitria Azzahra</h2>
       </footer>
     </div>
   );
