@@ -5,27 +5,15 @@ import {
   Clock, 
   Volume2, 
   VolumeX, 
-  Camera, 
   Mail,
   ChevronDown,
-  MapPin,
-  Send,
-  QrCode,
-  Gift,
-  Copy,
-  CheckCircle2
+  MapPin
 } from 'lucide-react';
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  
-  // States untuk Interaktivitas Baru
-  const [rsvpName, setRsvpName] = useState('');
-  const [rsvpStatus, setRsvpStatus] = useState('Hadir');
-  const [showTicket, setShowTicket] = useState(false);
-  const [copiedBank, setCopiedBank] = useState(false);
   
   const audioRef = useRef(null);
   const weddingDate = new Date('2026-04-02T08:00:00').getTime();
@@ -86,27 +74,6 @@ export default function App() {
     setTimeout(() => {
       window.scrollTo({ top: document.getElementById('hero').offsetTop, behavior: 'smooth' });
     }, 100);
-  };
-
-  const handleRsvpSubmit = (e) => {
-    e.preventDefault();
-    if (rsvpName.trim() === '') return;
-    setShowTicket(true);
-  };
-
-  const copyToClipboard = (text) => {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      setCopiedBank(true);
-      setTimeout(() => setCopiedBank(false), 2500);
-    } catch (err) {
-      console.error('Gagal menyalin', err);
-    }
-    document.body.removeChild(textArea);
   };
 
   // --- HALAMAN SAMPUL ---
@@ -200,7 +167,15 @@ export default function App() {
       `}} />
 
       <audio ref={audioRef} src="/YoungandBeautiful.mp3" loop />
->
+
+      {/* Floating Buttons Container (Diperbaiki) */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        <button 
+          onClick={toggleMusic}
+          className="p-4 bg-white/80 backdrop-blur-md text-[#2C302E] border border-[#2C302E]/10 rounded-full shadow-lg hover:bg-white transition-transform duration-300 hover:scale-110 flex items-center justify-center"
+        >
+          {isPlaying ? <Volume2 className="w-5 h-5 animate-pulse-slow text-[#D4AF37]" /> : <VolumeX className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* 1. HERO SECTION (Parallax) */}
@@ -241,7 +216,7 @@ export default function App() {
           </a>
         </div>
       </section>
-
+      
       {/* QUOTE SECTION */}
       <section id="quote" className="py-24 px-6 bg-[#F9F7F3] relative flex items-center justify-center text-center">
         <div className="max-w-3xl mx-auto reveal-on-scroll">
@@ -338,9 +313,6 @@ export default function App() {
         </div>
       </section>
 
-    
-
-     
       {/* FOOTER */}
       <footer className="py-16 bg-[#111] text-center border-t border-white/5">
         <div className="max-w-2xl mx-auto px-6 reveal-on-scroll">
