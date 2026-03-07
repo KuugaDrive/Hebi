@@ -101,10 +101,20 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [copiedBank, setCopiedBank] = useState(false);
   
+  // State baru untuk menyimpan nama tamu
+  const [guestName, setGuestName] = useState('');
+  
   const audioRef = useRef(null);
   const weddingDate = new Date('2026-04-02T08:00:00').getTime();
 
   useEffect(() => {
+    // Membaca parameter '?to=Nama+Tamu' dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const toParam = urlParams.get('to');
+    if (toParam) {
+      setGuestName(toParam);
+    }
+
     // Timer Hitung Mundur
     const timer = setInterval(() => {
       const now = new Date().getTime();
@@ -179,8 +189,19 @@ export default function App() {
               <p className="text-[#D4AF37] text-xs tracking-[0.4em] uppercase mb-4 font-light">The Wedding Of</p>
               <h1 className="text-5xl md:text-6xl font-serif text-white mb-6 drop-shadow-lg">Aluqmana <br/><span className="text-3xl italic font-light text-[#9B111E]">&</span><br/> Fitria</h1>
               
-              <div className="w-12 h-px bg-[#D4AF37]/50 mb-8"></div>
-              <p className="text-gray-300 text-sm mb-10 font-light tracking-wide">Kepada Yth. Bapak/Ibu/Saudara/i</p>
+              <div className="w-12 h-px bg-[#D4AF37]/50 mb-6"></div>
+              
+              <p className="text-gray-300 text-sm font-light tracking-wide mb-2">Kepada Yth. Bapak/Ibu/Saudara/i,</p>
+              {/* Logika untuk menampilkan nama tamu jika ada di URL */}
+              {guestName ? (
+                <p className="text-2xl md:text-3xl font-serif text-[#D4AF37] mb-8 drop-shadow-md capitalize">
+                  {guestName}
+                </p>
+              ) : (
+                <p className="text-xl font-serif text-[#D4AF37] mb-8 drop-shadow-md opacity-50">
+                  Tamu Undangan
+                </p>
+              )}
               
               <button 
                 onClick={handleOpenInvitation}
